@@ -1,0 +1,213 @@
+---
+- name: "[MONGODB-APB][PROVISION] Set to {{ state }} MongoDB ConfigMap resource"
+  k8s_v1_config_map:
+    state: "{{ state }}"
+    name: "{{ mongodb_configmap_name }}"
+    namespace: "{{ namespace }}"
+    labels:
+      app: "{{ service_name }}"
+      service: "{{ service_name }}"
+    resource_definition:
+      kind: 'ConfigMap'
+      apiVersion: 'v1'
+      metadata:
+        name: "{{ mongodb_configmap_name }}"
+        namespace: "{{ namespace }}"
+      data:
+        mongod.conf: "{{ lookup('template', 'mongod-config-map.yml.j2') }}"
+  register: mongod_cm
+
+- name: "[MONGODB-APB][PROVISION] Set to {{ state }} MongoDB PVC for Persistent plan"
+  k8s_v1_persistent_volume_claim:
+    state: "{{ state }}"
+    name: "{{ item.name }}"
+    namespace: "{{ namespace }}"
+    labels:
+      app: "{{ service_name }}"
+      service: "{{ service_name }}"
+    access_modes:
+      - ReadWriteOnce
+    resources_requests:
+      storage: "{{ item.size }}Gi"
+  register: mongodb_pvc
+  with_items:
+    - { name: "{{ mongodb_data_pvc_name }}", size: "{{ MONGODB_DATA_STORAGE_SIZE }}" }
+    - { name: "{{ mongodb_log_pvc_name }}", size: "{{ MONGODB_LOG_STORAGE_SIZE }}" }
+  when: _apb_plan_id == 'persistent'
+
+- name: "[MONGODB-APB][PROVISION] Set to {{ state }} the MongoDB Deployment Config for Ephemeral plan"
+  openshift_v1_deployment_config:
+    state: "{{ state }}"
+    name: "{{ service_name }}"
+    namespace: "{{ namespace }}"
+    labels:
+      app: "{{ service_name }}"
+      service: "{{ service_name }}"
+      replicas: 1
+    selector:
+      app: "{{ service_name }}"
+      service: "{{ service_name }}" 
+    strategy_type: Rolling
+    strategy_rolling_params:
+      interval_seconds: 1
+      max_surge: 25%
+      max_unavailable: 25%
+      timeout_seconds: 600
+      update_period_seconds: 1
+    spec_template_metadata_labels:
+      app: "{{ service_name }}"
+      service: "{{ service_name }}"
+    containers:
+      - name: "{{ service_name }}" 
+        env:
+          - name: MONGODB_ADMIN_PASSWORD
+            value: "{{ MONGODB_ADMIN_PASSWORD }}"
+          - name: MONGODB_PASSWORD
+            value: "{{ MONGODB_PASSWORD }}"
+          - name: MONGODB_USER
+            value: "{{ MONGODB_USER }}"
+          - name: MONGODB_DATABASE
+            value: "{{ MONGODB_DATABASE }}"
+      image: "{{ image }}"
+      image_pull_policy: IfNotPresent
+      liveness_probe:
+        initial_delay_seconds: 30
+        tcp_socket:
+          port: 27017
+        timeout_seconds: 1
+      readiness_probe:
+        exec:
+          command:
+            - "/bin/sh"
+            - "-i"
+            - "-c"
+            - "mongo 127.0.0.1:27017/$MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval=\"quit()\""
+        initial_delay_seconds: 3
+        timeout_seconds: 1
+      termination_message_path: /dev/termination-log
+      working_dir: /
+      ports:
+        - container_port: 27017
+          protocol: TCP
+      volume_mounts:
+        - mount_path: "{{ mongodb_conf_path }}"
+          name: "{{ mongodb_configmap_name }}"
+          subpath: mongod.conf
+        - mount_path: "{{ mongodb_data_path }}"
+          name: "{{ mongodb_data_volume_name }}"
+        - mount_path: "{{ mongodb_log_path }}"
+          name: "{{ mongodb_log_volume_name }}"
+    volumes:
+      - name: "{{ mongodb_configmap_name }}"
+        config_map:
+          name: "{{ mongodb_configmap_name }}"
+      - name: "{{ mongodb_data_volume_name }}"
+        emptyDir: []
+      - name: "{{ mongodb_log_volume_name }}"
+        emptyDir: []
+    dns_policy: ClusterFirst
+    restart_policy: Always
+    termination_grace_period_seconds: 30
+    test: false
+    triggers:
+      - type: ConfigChange
+  when: _apb_plan_id == 'ephemeral'
+
+- name: "[MONGODB-APB][PROVISION] Set to {{ state }} the MongoDB Deployment Config for Persistent plan"
+  openshift_v1_deployment_config:
+    state: "{{ state }}"
+    name: "{{ service_name }}"
+    namespace: "{{ namespace }}"
+    labels:
+      app: "{{ service_name }}"
+      service: "{{ service_name }}"
+      replicas: 1
+    selector:
+      app: "{{ service_name }}"
+      service: "{{ service_name }}" 
+    strategy_type: Rolling
+    strategy_rolling_params:
+      interval_seconds: 1
+      max_surge: 25%
+      max_unavailable: 25%
+      timeout_seconds: 600
+      update_period_seconds: 1
+    spec_template_metadata_labels:
+      app: "{{ service_name }}"
+      service: "{{ service_name }}"
+    containers:
+      - name: "{{ service_name }}" 
+        env:
+          - name: MONGODB_ADMIN_PASSWORD
+            value: "{{ MONGODB_ADMIN_PASSWORD }}"
+          - name: MONGODB_PASSWORD
+            value: "{{ MONGODB_PASSWORD }}"
+          - name: MONGODB_USER
+            value: "{{ MONGODB_USER }}"
+          - name: MONGODB_DATABASE
+            value: "{{ MONGODB_DATABASE }}"
+      image: "{{ image }}"
+      image_pull_policy: IfNotPresent
+      liveness_probe:
+        initial_delay_seconds: 30
+        tcp_socket:
+          port: 27017
+        timeout_seconds: 1
+      readiness_probe:
+        exec:
+          command:
+            - "/bin/sh"
+            - "-i"
+            - "-c"
+            - "mongo 127.0.0.1:27017/$MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval=\"quit()\""
+        initial_delay_seconds: 3
+        timeout_seconds: 1
+      termination_message_path: /dev/termination-log
+      working_dir: /
+      ports:
+        - container_port: 27017
+          protocol: TCP
+      volume_mounts:
+        - mount_path: "{{ mongodb_conf_path }}"
+          name: "{{ mongodb_configmap_name }}"
+          subpath: mongod.conf
+        - mount_path: "{{ mongodb_data_path }}"
+          name: "{{ mongodb_data_volume_name }}"
+        - mount_path: "{{ mongodb_log_path }}"
+          name: "{{ mongodb_log_volume_name }}"
+    volumes:
+      - name: "{{ mongodb_configmap_name }}"
+        config_map:
+          name: "{{ mongodb_configmap_name }}"
+      - name: "{{ mongodb_data_volume_name }}"
+        persistent_volume_claim:
+          claim_name: "{{  mongodb_data_pvc_name }}"
+      - name: "{{ mongodb_log_volume_name }}"
+        persistent_volume_claim:
+          claim_name: "{{  mongodb_log_pvc_name }}"
+    dns_policy: ClusterFirst
+    restart_policy: Always
+    termination_grace_period_seconds: 30
+    test: false
+    triggers:
+      - type: ConfigChange
+  when: _apb_plan_id == 'persistent'
+
+- name: "[MONGODB-APB][PROVISION] Wait for MongoDB to be ready"
+  wait_for:
+    port: 27017
+    host: "{{ mongodb_service.service.spec.cluster_ip }}"
+    timeout: 300
+  when: state == "present"
+
+- name: "[MONGODB-APB][PROVISION] Encode MongoDB Credentials"
+  asb_encode_binding:
+    fields:
+      DB_TYPE: "{{ service_name }}"
+      DB_HOST: "{{ service_name }}"
+      DB_PORT: 27017
+      DB_USER: "{{ MONGODB_USER }}"
+      DB_PASSWORD: "{{ MONGODB_PASSWORD }}"
+      DB_NAME: "{{ MONGODB_DATABASE }}"
+  when: state == "present"
+

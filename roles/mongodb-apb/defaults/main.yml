@@ -1,0 +1,15 @@
+---
+# MongoDB APB
+service_name: 'mongodb'
+app_name: "{{ service_name }}-apb"
+mongodb_image: "centos/mongodb-{{ MONGODB_VERSION | replace('.', '') }}-centos7" 
+mongodb_data_volume_name: "{{ service_name }}-data"
+mongodb_log_volume_name: "{{ service_name }}-log"
+mongodb_configmap_name: "{{ service_name }}-configmap"
+mongodb_data_pvc_name: "{{ service_name }}-data-pvc"
+mongodb_log_pvc_name: "{{ service_name }}-log-pvc"
+
+# MongoDB Config
+mongodb_conf_path: '/etc/mongod.conf'
+mongodb_data_path: '/var/lib/mongodb/data'
+mongodb_log_path: '/var/log/mongodb/mongod.log'

@@ -1,48 +1,9 @@
 ---
-_params: &_params
-  - name: MONGODB_VERSION
-    default: 3.2
-    title: Version of MongoDB image to be used (2.4, 2.6, 3.2 or latest).
-    type: enum
-    enum: ['2.4', '2.6', '3.2', 'latest']
-    display_type: select
-
-    # MongoDB Conf
-  - name: MONGODB_USER
-    default: 'username'
-    type: string
-    pattern: "^[a-zA-Z0-9_.-]*$"
-    required: False
-    title: Username for MongoDB user that will be used for accessing the database.
-  - name: MONGODB_PASSWORD
-    default: 'password'
-    type: string
-    pattern: "^[a-zA-Z0-9_.-]*$"
-    display_type: password
-    title: Password for the MongoDB connection user.
-  - name: MONGODB_DATABASE
-    default: sampledb
-    type: string
-    title: Name of the MongoDB database accessed.
-  - name: MONGODB_ADMIN_PASSWORD
-    default:
-    type: string
-    title: Password for the database admin user.
-
-    ## Environment sizing
-  - name: MONGODB_STORAGE_SIZE
-    default: 1Gi
-    type: string
-    title: Volume space available for data, e.g. 512Mi, 2Gi.
-  - name: MONGODB_MEMORY_LIMIT
-    default: 512Mi
-    type: string
-    title: Maximum amount of memory the container can use.
 
 version: 1.0
 name: mongodb-apb
 description: Deploy MongoDB app on your Openshift Project
-bindable: False
+bindable: True
 async: optional
 metadata:
   documentationUrl: https://access.redhat.com
@@ -59,4 +20,100 @@ plans:
       displayName: Ephemeral
       longDescription: This plan will deploy a MongoDB standalone or HA instance/s using ephemeral storage
       cost: €0.00
-    parameters: *_params
+    parameters:
+      - name: MONGODB_VERSION
+        default: 3.4
+        title: Version of MongoDB image to be used (2.6, 3.2, 3.4 or latest).
+        type: enum
+        enum: ['2.6', '3.2', '3.4', 'latest']
+        display_type: select
+
+        # MongoDB Conf
+      - name: MONGODB_USER
+        default: 'username'
+        type: string
+        pattern: "^[a-zA-Z0-9_.-]*$"
+        required: False
+        title: Username for MongoDB user that will be used for accessing the database.
+      - name: MONGODB_PASSWORD
+        required: True
+        default: 'password'
+        type: string
+        pattern: "^[a-zA-Z0-9_.-]*$"
+        display_type: password
+        title: Password for the MongoDB connection user.
+      - name: MONGODB_DATABASE
+        default: 'sampledb'
+        pattern: "^[a-zA-Z0-9_-]*$"
+        type: string
+        title: Name of the MongoDB database accessed.
+      - name: MONGODB_ADMIN_PASSWORD
+        required: True
+        default:
+        pattern: "^[a-zA-Z0-9_.-]*$"
+        type: string
+        display_type: password
+        title: Password for the database admin user.
+
+        ## Environment sizing
+      - name: MONGODB_MEMORY_LIMIT
+        default: 512Mi
+        type: string
+        title: Maximum amount of memory the container can use. e.g 512Mi 1Gi
+
+  - name: persistent
+    description: Persistent storage plan to deploy mongodb-apb
+    free: True
+    metadata:
+      displayName: Persistent
+      longDescription: This plan will deploy a MongoDB standalone or HA instance/s using persistent storage
+      cost: €0.00
+    parameters:
+      - name: MONGODB_VERSION
+        default: 3.4
+        title: Version of MongoDB image to be used (2.6, 3.2, 3.4 or latest).
+        type: enum
+        enum: ['2.6', '3.2', '3.4', 'latest']
+        display_type: select
+
+        # MongoDB Conf
+      - name: MONGODB_USER
+        default: 'username'
+        type: string
+        pattern: "^[a-zA-Z0-9_.-]*$"
+        required: False
+        title: Username for MongoDB user that will be used for accessing the database.
+      - name: MONGODB_PASSWORD
+        required: True
+        default: 'password'
+        type: string
+        pattern: "^[a-zA-Z0-9_.-]*$"
+        display_type: password
+        title: Password for the MongoDB connection user.
+      - name: MONGODB_DATABASE
+        default: 'sampledb'
+        pattern: "^[a-zA-Z0-9_-]*$"
+        type: string
+        title: Name of the MongoDB database accessed.
+      - name: MONGODB_ADMIN_PASSWORD
+        required: True
+        default:
+        pattern: "^[a-zA-Z0-9_.-]*$"
+        type: string
+        display_type: password
+        title: Password for the database admin user.
+
+        ## Environment sizing
+      - name: MONGODB_DATA_STORAGE_SIZE
+        default: 1
+        type: number
+        title: Volume space available for data inGi.
+      - name: MONGODB_LOG_STORAGE_SIZE
+        default: 1
+        type: number
+        title: Volume space available for logs in Gi.
+      - name: MONGODB_MEMORY_LIMIT
+        default: 512Mi
+        type: string
+        title: Maximum amount of memory the container can use. e.g 512Mi 1Gi
+
