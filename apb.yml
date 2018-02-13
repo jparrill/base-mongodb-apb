@@ -107,12 +107,7 @@ plans:
         default: 1
         type: number
         title: Volume space available for data inGi.
-      - name: MONGODB_LOG_STORAGE_SIZE
-        default: 1
-        type: number
-        title: Volume space available for logs in Gi.
       - name: MONGODB_MEMORY_LIMIT
         default: 512Mi
         type: string
         title: Maximum amount of memory the container can use. e.g 512Mi 1Gi
-
