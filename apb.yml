@@ -1,5 +1,4 @@
 ---
-
 version: 1.0
 name: mongodb-apb
 description: Deploy MongoDB app on your Openshift Project
@@ -23,9 +22,9 @@ plans:
     parameters:
       - name: MONGODB_VERSION
         default: 3.4
-        title: Version of MongoDB image to be used (2.6, 3.2, 3.4 or latest).
+        title: Version of MongoDB image to be used (2.6, 3.2 or 3.4).
         type: enum
-        enum: ['2.6', '3.2', '3.4', 'latest']
+        enum: ['2.6', '3.2', '3.4']
         display_type: select
 
         # MongoDB Conf
@@ -49,7 +48,7 @@ plans:
         title: Name of the MongoDB database accessed.
       - name: MONGODB_ADMIN_PASSWORD
         required: True
-        default:
+        default: 'admin'
         pattern: "^[a-zA-Z0-9_.-]*$"
         type: string
         display_type: password
@@ -71,9 +70,9 @@ plans:
     parameters:
       - name: MONGODB_VERSION
         default: 3.4
-        title: Version of MongoDB image to be used (2.6, 3.2, 3.4 or latest).
+        title: Version of MongoDB image to be used (2.6, 3.2 or 3.4).
         type: enum
-        enum: ['2.6', '3.2', '3.4', 'latest']
+        enum: ['2.6', '3.2', '3.4']
         display_type: select
 
         # MongoDB Conf
@@ -97,7 +96,7 @@ plans:
         title: Name of the MongoDB database accessed.
       - name: MONGODB_ADMIN_PASSWORD
         required: True
-        default:
+        default: 'admin'
         pattern: "^[a-zA-Z0-9_.-]*$"
         type: string
         display_type: password

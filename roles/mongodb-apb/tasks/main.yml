@@ -6,7 +6,7 @@
 
 - block:
   - name: "[MONGODB-APB][MAIN] Deprovision MongoDB"
-    include_tasks: deprovision.yml
+    include_tasks: mongodb.yml
   when: action == 'deprovision'
 
 - block:

@@ -29,11 +29,14 @@
       - ReadWriteOnce
     resources_requests:
       storage: "{{ item.size }}Gi"
-  register: mongodb_pvc
   with_items:
     - { name: "{{ mongodb_data_pvc_name }}", size: "{{ MONGODB_DATA_STORAGE_SIZE }}" }
     - { name: "{{ mongodb_log_pvc_name }}", size: "{{ MONGODB_LOG_STORAGE_SIZE }}" }
+  register: mongodb_pvc
   when: _apb_plan_id == 'persistent'
+
+- debug:
+    var: mongodb_image
 
 - name: "[MONGODB-APB][PROVISION] Set to {{ state }} the MongoDB Deployment Config for Ephemeral plan"
   openshift_v1_deployment_config:
@@ -43,10 +46,10 @@
     labels:
       app: "{{ service_name }}"
       service: "{{ service_name }}"
-      replicas: 1
+    replicas: 1
     selector:
       app: "{{ service_name }}"
-      service: "{{ service_name }}" 
+      service: "{{ service_name }}"
     strategy_type: Rolling
     strategy_rolling_params:
       interval_seconds: 1
@@ -58,8 +61,7 @@
       app: "{{ service_name }}"
       service: "{{ service_name }}"
     containers:
-      - name: "{{ service_name }}" 
-        env:
+      - env:
           - name: MONGODB_ADMIN_PASSWORD
             value: "{{ MONGODB_ADMIN_PASSWORD }}"
           - name: MONGODB_PASSWORD
@@ -68,38 +70,43 @@
             value: "{{ MONGODB_USER }}"
           - name: MONGODB_DATABASE
             value: "{{ MONGODB_DATABASE }}"
-      image: "{{ image }}"
-      image_pull_policy: IfNotPresent
-      liveness_probe:
-        initial_delay_seconds: 30
-        tcp_socket:
-          port: 27017
-        timeout_seconds: 1
-      readiness_probe:
-        exec:
-          command:
-            - "/bin/sh"
-            - "-i"
-            - "-c"
-            - "mongo 127.0.0.1:27017/$MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval=\"quit()\""
-        initial_delay_seconds: 3
-        timeout_seconds: 1
-      termination_message_path: /dev/termination-log
-      working_dir: /
-      ports:
-        - container_port: 27017
-          protocol: TCP
-      volume_mounts:
-        - mount_path: "{{ mongodb_conf_path }}"
-          name: "{{ mongodb_configmap_name }}"
-          subpath: mongod.conf
-        - mount_path: "{{ mongodb_data_path }}"
-          name: "{{ mongodb_data_volume_name }}"
-        - mount_path: "{{ mongodb_log_path }}"
-          name: "{{ mongodb_log_volume_name }}"
+        name: "{{ service_name }}"
+        image: "{{ mongodb_image }}"
+        #command: ["{{ bin_path }}/mongod", '-f', "{{ mongodb_conf_path }}/mongod.conf", '--dbpath', "{{ mongodb_data_path }}"]
+        lifecycle:
+          post_start:
+            exec:
+              command: ['/bin/sh', '-c', 'echo DESTRIPAR GENTE MOLA']
+        image_pull_policy: IfNotPresent
+        liveness_probe:
+          initial_delay_seconds: 30
+          tcp_socket:
+            port: 27017
+          timeout_seconds: 1
+        readiness_probe:
+          exec:
+            command:
+              - "/bin/sh"
+              - "-i"
+              - "-c"
+              - "mongo 127.0.0.1:27017/$MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval='quit()'"
+          initial_delay_seconds: 3
+          timeout_seconds: 1
+        ports:
+          - container_port: 27017
+            protocol: TCP
+        volume_mounts:
+          - mount_path: "{{ mongodb_conf_path }}"
+            name: "{{ mongodb_configmap_name }}"
+            subpath: mongod.conf
+          - mount_path: "{{ mongodb_data_path }}"
+            name: "{{ mongodb_data_volume_name }}"
+          - mount_path: "{{ mongodb_log_path }}"
+            name: "{{ mongodb_log_volume_name }}"
     volumes:
       - name: "{{ mongodb_configmap_name }}"
         config_map:
+          defaultMode: 0664
           name: "{{ mongodb_configmap_name }}"
       - name: "{{ mongodb_data_volume_name }}"
         emptyDir: []
@@ -111,6 +118,7 @@
     test: false
     triggers:
       - type: ConfigChange
+  register: mongod_dc
   when: _apb_plan_id == 'ephemeral'
 
 - name: "[MONGODB-APB][PROVISION] Set to {{ state }} the MongoDB Deployment Config for Persistent plan"
@@ -121,10 +129,10 @@
     labels:
       app: "{{ service_name }}"
       service: "{{ service_name }}"
-      replicas: 1
+    replicas: 1
     selector:
       app: "{{ service_name }}"
-      service: "{{ service_name }}" 
+      service: "{{ service_name }}"
     strategy_type: Rolling
     strategy_rolling_params:
       interval_seconds: 1
@@ -136,8 +144,7 @@
       app: "{{ service_name }}"
       service: "{{ service_name }}"
     containers:
-      - name: "{{ service_name }}" 
-        env:
+      - env:
           - name: MONGODB_ADMIN_PASSWORD
             value: "{{ MONGODB_ADMIN_PASSWORD }}"
           - name: MONGODB_PASSWORD
@@ -146,35 +153,34 @@
             value: "{{ MONGODB_USER }}"
           - name: MONGODB_DATABASE
             value: "{{ MONGODB_DATABASE }}"
-      image: "{{ image }}"
-      image_pull_policy: IfNotPresent
-      liveness_probe:
-        initial_delay_seconds: 30
-        tcp_socket:
-          port: 27017
-        timeout_seconds: 1
-      readiness_probe:
-        exec:
-          command:
-            - "/bin/sh"
-            - "-i"
-            - "-c"
-            - "mongo 127.0.0.1:27017/$MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval=\"quit()\""
+        name: "{{ service_name }}"
+        image: "{{ mongodb_image }}"
+        image_pull_policy: IfNotPresent
+        liveness_probe:
+          initial_delay_seconds: 30
+          tcp_socket:
+            port: 27017
+          timeout_seconds: 1
+        readiness_probe:
+          exec:
+            command:
+              - "/bin/sh"
+              - "-i"
+              - "-c"
+              - "mongo 127.0.0.1:27017/$MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval=\"quit()\""
         initial_delay_seconds: 3
         timeout_seconds: 1
-      termination_message_path: /dev/termination-log
-      working_dir: /
-      ports:
-        - container_port: 27017
-          protocol: TCP
-      volume_mounts:
-        - mount_path: "{{ mongodb_conf_path }}"
-          name: "{{ mongodb_configmap_name }}"
-          subpath: mongod.conf
-        - mount_path: "{{ mongodb_data_path }}"
-          name: "{{ mongodb_data_volume_name }}"
-        - mount_path: "{{ mongodb_log_path }}"
-          name: "{{ mongodb_log_volume_name }}"
+        ports:
+          - container_port: 27017
+            protocol: TCP
+        volume_mounts:
+          - mount_path: "{{ mongodb_conf_path }}"
+            name: "{{ mongodb_configmap_name }}"
+            subpath: mongod.conf
+          - mount_path: "{{ mongodb_data_path }}"
+            name: "{{ mongodb_data_volume_name }}"
+          - mount_path: "{{ mongodb_log_path }}"
+            name: "{{ mongodb_log_volume_name }}"
     volumes:
       - name: "{{ mongodb_configmap_name }}"
         config_map:
@@ -191,23 +197,44 @@
     test: false
     triggers:
       - type: ConfigChange
+  register: mongod_dc
   when: _apb_plan_id == 'persistent'
+
+- name: "[MONGODB-APB][PROVISION] Set to {{ state }} the MongoDB Service"
+  k8s_v1_service:
+    name: "{{ service_name }}"
+    namespace: "{{ namespace }}"
+    labels:
+      app: "{{ service_name }}"
+      service: "{{ service_name }}"
+    selector:
+      app: "{{ service_name }}"
+      service: "{{ service_name }}"
+    ports:
+    - name: "{{ service_name }}-27017"
+      port: 27017
+      protocol: TCP
+      target_port: 27017
+    state: "{{ state }}"
+  register: mongodb_svc
 
 - name: "[MONGODB-APB][PROVISION] Wait for MongoDB to be ready"
   wait_for:
     port: 27017
-    host: "{{ mongodb_service.service.spec.cluster_ip }}"
+    host: "{{ mongodb_svc.service.spec.cluster_ip }}"
     timeout: 300
   when: state == "present"
 
-- name: "[MONGODB-APB][PROVISION] Encode MongoDB Credentials"
-  asb_encode_binding:
-    fields:
-      DB_TYPE: "{{ service_name }}"
-      DB_HOST: "{{ service_name }}"
-      DB_PORT: 27017
-      DB_USER: "{{ MONGODB_USER }}"
-      DB_PASSWORD: "{{ MONGODB_PASSWORD }}"
-      DB_NAME: "{{ MONGODB_DATABASE }}"
-  when: state == "present"
+  # - name: "[MONGODB-APB][PROVISION] Encode MongoDB Credentials"
+  #   asb_encode_binding:
+  #     fields:
+  #       DB_TYPE: "{{ service_name }}"
+  #       DB_HOST: "{{ service_name }}"
+  #       DB_PORT: 27017
+  #       DB_USER: "{{ MONGODB_USER }}"
+  #       DB_PASSWORD: "{{ MONGODB_PASSWORD }}"
+  #       DB_NAME: "{{ MONGODB_DATABASE }}"
+  #   when:
+  #     - state == 'present'
+  #     - action != 'test'
 

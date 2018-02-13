@@ -1,13 +1,9 @@
 systemLog:
   verbosity: 0
-  destination: file
-  path: "{{ mongodb_log_path }}"
-  logAppend: true
 storage:
   journal:
     enabled: true
-processManagement:
-  fork: true
+  dbPath: "{{ mongodb_data_path }}"
 net:
   bindIp: 127.0.0.1
   port: 27017
