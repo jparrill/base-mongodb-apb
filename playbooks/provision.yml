@@ -3,7 +3,7 @@
   gather_facts: false
   connection: local
   vars:
-    action: 'provision'
+    mode: 'provision'
     state: 'present'
   roles:
   - role: ansible.kubernetes-modules

@@ -1,0 +1,25 @@
+---
+- name: "[MONGODB-APB][TEST] Testing MongoDB Deployment"
+  debug:
+    msg: "TEST TASKS IN EXECUTION Mode: {{ mode }} State: {{ state }}" 
+
+- name: "[MONGODB-APB][TEST] Sleeping"
+  pause:
+    seconds: 10
+
+# Check that MongoDB don't fall down after some seconds
+- name: "[MONGODB-APB][TEST] Ensure that MongoDB is still ready"
+  wait_for:
+    port: 27017
+    host: "{{ mongodb_svc.service.spec.cluster_ip }}"
+    timeout: 300
+  register: mongodb_conn
+  when: state == "present"
+
+- name: "[MONGODB-APB][TEST] Saving Tests results on error"
+  asb_save_test_result:
+    fail: true
+    msg: "Error connecting with MongoDB.data: {{ mongodb_conn }}"
+  when: not mongodb_conn.rc | bool
+
+

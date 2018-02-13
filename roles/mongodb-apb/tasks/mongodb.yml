@@ -31,7 +31,6 @@
       storage: "{{ item.size }}Gi"
   with_items:
     - { name: "{{ mongodb_data_pvc_name }}", size: "{{ MONGODB_DATA_STORAGE_SIZE }}" }
-    - { name: "{{ mongodb_log_pvc_name }}", size: "{{ MONGODB_LOG_STORAGE_SIZE }}" }
   register: mongodb_pvc
   when: _apb_plan_id == 'persistent'
 
@@ -101,16 +100,12 @@
             subpath: mongod.conf
           - mount_path: "{{ mongodb_data_path }}"
             name: "{{ mongodb_data_volume_name }}"
-          - mount_path: "{{ mongodb_log_path }}"
-            name: "{{ mongodb_log_volume_name }}"
     volumes:
       - name: "{{ mongodb_configmap_name }}"
         config_map:
           defaultMode: 0664
           name: "{{ mongodb_configmap_name }}"
       - name: "{{ mongodb_data_volume_name }}"
-        emptyDir: []
-      - name: "{{ mongodb_log_volume_name }}"
         emptyDir: []
     dns_policy: ClusterFirst
     restart_policy: Always
@@ -179,8 +174,6 @@
             subpath: mongod.conf
           - mount_path: "{{ mongodb_data_path }}"
             name: "{{ mongodb_data_volume_name }}"
-          - mount_path: "{{ mongodb_log_path }}"
-            name: "{{ mongodb_log_volume_name }}"
     volumes:
       - name: "{{ mongodb_configmap_name }}"
         config_map:
@@ -188,9 +181,6 @@
       - name: "{{ mongodb_data_volume_name }}"
         persistent_volume_claim:
           claim_name: "{{  mongodb_data_pvc_name }}"
-      - name: "{{ mongodb_log_volume_name }}"
-        persistent_volume_claim:
-          claim_name: "{{  mongodb_log_pvc_name }}"
     dns_policy: ClusterFirst
     restart_policy: Always
     termination_grace_period_seconds: 30
@@ -225,16 +215,4 @@
     timeout: 300
   when: state == "present"
 
-  # - name: "[MONGODB-APB][PROVISION] Encode MongoDB Credentials"
-  #   asb_encode_binding:
-  #     fields:
-  #       DB_TYPE: "{{ service_name }}"
-  #       DB_HOST: "{{ service_name }}"
-  #       DB_PORT: 27017
-  #       DB_USER: "{{ MONGODB_USER }}"
-  #       DB_PASSWORD: "{{ MONGODB_PASSWORD }}"
-  #       DB_NAME: "{{ MONGODB_DATABASE }}"
-  #   when:
-  #     - state == 'present'
-  #     - action != 'test'
 

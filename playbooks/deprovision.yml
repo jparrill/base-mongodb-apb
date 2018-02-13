@@ -3,7 +3,7 @@
   gather_facts: false
   connection: local
   vars:
-    action: 'deprovision'
+    mode: 'deprovision'
     state: 'absent'
   roles:
   - role: ansible.kubernetes-modules

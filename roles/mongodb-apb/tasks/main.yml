@@ -2,15 +2,21 @@
 - block:
   - name: "[MONGODB-APB][MAIN] Deploying MongoDB"
     include_tasks: mongodb.yml
-  when: action == 'provision'
+
+  - name: "[MONGODB-APB][MAIN] Binding Credentials MongoDB"
+    include_tasks: bind_credentials.yml
+  when: mode == 'provision'
 
 - block:
   - name: "[MONGODB-APB][MAIN] Deprovision MongoDB"
     include_tasks: mongodb.yml
-  when: action == 'deprovision'
+  when: mode == 'deprovision'
 
 - block:
+  - name: "[MONGODB-APB][MAIN] Deploying MongoDB"
+    include_tasks: mongodb.yml
+
   - name: "[MONGODB-APB][MAIN] Test MongoDB deployment"
     include_tasks: test.yml
-  when: action == 'test'
+  when: mode == 'test'
 

@@ -1,6 +1,9 @@
 ---
+# Execution mode
 namespace: 'test_ephemeral_mongodb'
 _apb_plan_id: 'ephemeral'
+
+# MongoDB Stuff
 MONGODB_VERSION: '3.2'
 MONGODB_USER: 'ephemeral_user'
 MONGODB_PASSWORD: 'ephemeral'

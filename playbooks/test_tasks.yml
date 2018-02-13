@@ -3,24 +3,18 @@
   openshift_v1_project:
     name: '{{ namespace }}'
 
-- name: "[TEST][{{ _apb_plan_id }}] Provision full MongoDB role"
+- name: "[TEST][{{ _apb_plan_id }}] Deploy & Verify MongoDB role"
   include_role:
     name: mongodb-apb
   vars:
-    action: 'provision'
+    mode: 'test'
     state: 'present'
-
-- name: "[TEST][{{ _apb_plan_id }}] Verify MongoDB role"
-  include_role:
-    name: mongodb-apb
-  vars:
-    action: 'test'
 
 - name: "[TEST][{{ _apb_plan_id }}] Deprovision MongoDB role"
   include_role:
     name: mongodb-apb
   vars:
-    action: 'deprovision'
+    mode: 'deprovision'
     state: 'absent'
 
 - name: "[TEST][{{ _apb_plan_id }}] Delete test project"
