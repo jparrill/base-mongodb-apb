@@ -3,27 +3,7 @@
   set_fact:
     service_name: "{{ MONGODB_SERVICE_NAME }}"
 
-- name: "[MONGODB-APB][{{ mode | upper }}] Set to {{ state }} the MongoDB Internal Service"
-  k8s_v1_service:
-    state: "{{ state }}"
-    name: "{{ service_name }}-internal"
-    namespace: "{{ namespace }}"
-    annotations:
-      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
-    cluster_ip: 'None'
-    labels:
-      app: "{{ service_name }}"
-      name: "{{ service_name }}"
-    selector:
-      app: "{{ service_name }}"
-      name: "{{ service_name }}"
-    ports:
-    - name: "{{ service_name }}-27017"
-      port: 27017
-      protocol: TCP
-      #      target_port: 27017
-  register: mongodb_svc_internal
-
+# A non-headless service which takes pod readiness into consideration
 - name: "[MONGODB-APB][{{ mode | upper }}] Set to {{ state }} the MongoDB Service"
   k8s_v1_service:
     state: "{{ state }}"
@@ -36,18 +16,38 @@
       app: "{{ service_name }}"
       name: "{{ service_name }}"
     ports:
-    - name: "{{ service_name }}-27017"
+    - name: "{{ service_name }}"
       port: 27017
       protocol: TCP
-      #target_port: 27017
   register: mongodb_svc
+
+# A headless service to create DNS records
+- name: "[MONGODB-APB][{{ mode | upper }}] Set to {{ state }} the MongoDB Internal Service"
+  k8s_v1_service:
+    state: "{{ state }}"
+    name: "{{ service_name }}-internal"
+    namespace: "{{ namespace }}"
+    spec_cluster_ip: "None"
+    annotations:
+      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    labels:
+      app: "{{ service_name }}"
+      name: "{{ service_name }}"
+    selector:
+      app: "{{ service_name }}"
+      name: "{{ service_name }}"
+    ports:
+    - name: "{{ service_name }}"
+      port: 27017
+      protocol: TCP
+  register: mongodb_svc_internal
 
 - name: "[MONGODB-APB][{{ mode | upper }}] Set to {{ state }} the MongoDB HA Statefull Set for HA and plan"
   k8s_v1beta1_stateful_set:
     state: "{{ state }}"
     name: "{{ service_name }}"
     namespace: "{{ namespace }}"
-    service_name: "{{ service_name }}"
+    service_name: "{{ service_name }}-internal"
     labels:
       app: "{{ service_name }}"
       name: "{{ service_name }}"
@@ -77,6 +77,9 @@
         name: "{{ service_name }}"
         image: "{{ mongodb_image }}"
         command: ["run-mongod-replication"]
+        resources:
+          limits:
+            memory: "{{ MONGODB_MEMORY_LIMIT }}"
         liveness_probe:
           initial_delay_seconds: 30
           tcp_socket:
