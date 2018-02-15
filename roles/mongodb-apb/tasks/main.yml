@@ -37,7 +37,7 @@
 
   - name: "[MONGODB-APB][MAIN] Set Deployment type for HA"
     set_fact:
-      deployment_type: 'ha'
+      deployment_type: 'cluster'
     when: provisioned_resource.rc == 1
 
   - name: "[MONGODB-APB][MAIN] Set Deployment type Standalone"
@@ -51,7 +51,7 @@
 
   - name: "[MONGODB-APB][MAIN] Deprovision MongoDB HA"
     include_tasks: mongodb_ha.yml
-    when: deployment_type == 'ha'
+    when: deployment_type == 'cluster'
   when: mode == 'deprovision'
 
 # Tests
@@ -62,7 +62,7 @@
 
   - name: "[MONGODB-APB][MAIN] Deploying MongoDB HA"
     include_tasks: mongodb_ha.yml
-    when: deployment_type == 'ha'
+    when: deployment_type == 'cluster'
 
   - name: "[MONGODB-APB][MAIN] Test MongoDB deployment"
     include_tasks: test.yml

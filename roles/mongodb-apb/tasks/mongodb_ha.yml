@@ -3,27 +3,8 @@
   set_fact:
     service_name: "{{ MONGODB_SERVICE_NAME }}"
 
-- name: "[MONGODB-APB][{{ mode | upper }}] Set to {{ state }} MongoDB HA PVC for Persistent plan"
-  k8s_v1_persistent_volume_claim:
-    state: "{{ state }}"
-    name: "{{ item.name }}"
-    namespace: "{{ namespace }}"
-    labels:
-      app: "{{ service_name }}"
-      name: "{{ service_name }}"
-    access_modes:
-      - ReadWriteOnce
-    resources_requests:
-      storage: "{{ item.size }}Gi"
-  with_items:
-    - { name: "{{ mongodb_data_pvc_name }}", size: "{{ MONGODB_DATA_STORAGE_SIZE }}" }
-  register: mongodb_pvc
-
-- debug:
-    var: mongodb_image
-
 - name: "[MONGODB-APB][{{ mode | upper }}] Set to {{ state }} the MongoDB Internal Service"
-  k8s_v1_name:
+  k8s_v1_service:
     state: "{{ state }}"
     name: "{{ service_name }}-internal"
     namespace: "{{ namespace }}"
@@ -40,11 +21,11 @@
     - name: "{{ service_name }}-27017"
       port: 27017
       protocol: TCP
-      target_port: 27017
+      #      target_port: 27017
   register: mongodb_svc_internal
 
 - name: "[MONGODB-APB][{{ mode | upper }}] Set to {{ state }} the MongoDB Service"
-  k8s_v1_name:
+  k8s_v1_service:
     state: "{{ state }}"
     name: "{{ service_name }}"
     namespace: "{{ namespace }}"
@@ -58,14 +39,15 @@
     - name: "{{ service_name }}-27017"
       port: 27017
       protocol: TCP
-      target_port: 27017
+      #target_port: 27017
   register: mongodb_svc
 
-- name: "[MONGODB-APB][{{ mode | upper }}] Set to {{ state }} the MongoDB HA Statefull Set for HA + Persistent plan"
-  openshift_v1_stateful_set:
+- name: "[MONGODB-APB][{{ mode | upper }}] Set to {{ state }} the MongoDB HA Statefull Set for HA and plan"
+  k8s_v1beta1_stateful_set:
     state: "{{ state }}"
     name: "{{ service_name }}"
     namespace: "{{ namespace }}"
+    service_name: "{{ service_name }}"
     labels:
       app: "{{ service_name }}"
       name: "{{ service_name }}"
@@ -94,7 +76,7 @@
             value: "{{ MONGODB_SERVICE_NAME }}-internal"
         name: "{{ service_name }}"
         image: "{{ mongodb_image }}"
-        image_pull_policy: IfNotPresent
+        command: ["run-mongod-replication"]
         liveness_probe:
           initial_delay_seconds: 30
           tcp_socket:
@@ -105,26 +87,25 @@
             command:
               - "stat"
               - "/tmp/initialized"
-        initial_delay_seconds: 3
-        timeout_seconds: 1
+          initial_delay_seconds: 3
+          timeout_seconds: 1
         ports:
           - container_port: 27017
             protocol: TCP
         volume_mounts:
-          - mount_path: "{{ mongodb_data_path }}"
-            name: "{{ mongodb_data_volume_name }}"
-    volumes:
-      - name: "{{ mongodb_data_volume_name }}"
-        persistent_volume_claim:
-          claim_name: "{{  mongodb_data_pvc_name }}"
-    restart_policy: Always
-    termination_grace_period_seconds: 30
-    test: false
-    triggers:
-      - type: ConfigChange
+          - name: "{{ mongodb_data_volume_name }}"
+            mount_path: "{{ mongodb_data_path }}"
+    spec_volume_claim_templates:
+      - metadata:
+          name: "{{ mongodb_data_volume_name }}"
+        spec:
+          access_modes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: "{{ MONGODB_DATA_STORAGE_SIZE }}Gi"
+    termination_grace_period_seconds: 600
   register: mongod_set
-  when: _apb_plan_id == 'persistent'
-
 
 - name: "[MONGODB-APB][{{ mode | upper }}] Wait for MongoDB to be ready"
   wait_for:

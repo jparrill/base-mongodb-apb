@@ -71,11 +71,6 @@
             value: "{{ MONGODB_DATABASE }}"
         name: "{{ service_name }}"
         image: "{{ mongodb_image }}"
-        #command: ["{{ bin_path }}/mongod", '-f', "{{ mongodb_conf_path }}/mongod.conf", '--dbpath', "{{ mongodb_data_path }}"]
-        lifecycle:
-          post_start:
-            exec:
-              command: ['/bin/sh', '-c', 'echo DESTRIPAR GENTE MOLA']
         image_pull_policy: IfNotPresent
         liveness_probe:
           initial_delay_seconds: 30
