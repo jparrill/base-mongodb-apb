@@ -2,6 +2,7 @@
 # Execution mode
 namespace: 'test_ephemeral_mongodb'
 _apb_plan_id: 'ephemeral'
+deployment_type: 'standalone'
 
 # MongoDB Stuff
 MONGODB_VERSION: '3.2'
