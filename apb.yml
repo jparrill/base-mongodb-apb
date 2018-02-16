@@ -20,12 +20,18 @@ plans:
       longDescription: This plan will deploy a MongoDB standalone or HA instance/s using ephemeral storage
       cost: €0.00
     parameters:
+        # Container Specs 
       - name: MONGODB_VERSION
         default: 3.4
         title: Version of MongoDB image to be used (2.6, 3.2 or 3.4).
         type: enum
         enum: ['2.6', '3.2', '3.4']
         display_type: select
+      - name: MONGODB_IMAGE_TAG
+        default: 'latest'
+        type: string
+        pattern: "^[a-zA-Z0-9_.-]*$"
+        required: False
 
         # MongoDB Conf
       - name: MONGODB_USER
@@ -68,12 +74,18 @@ plans:
       longDescription: This plan will deploy a MongoDB standalone or HA instance/s using persistent storage
       cost: €0.00
     parameters:
+        # Container Specs 
       - name: MONGODB_VERSION
         default: 3.4
         title: Version of MongoDB image to be used (2.6, 3.2 or 3.4).
         type: enum
         enum: ['2.6', '3.2', '3.4']
         display_type: select
+      - name: MONGODB_IMAGE_TAG
+        default: 'latest'
+        type: string
+        pattern: "^[a-zA-Z0-9_.-]*$"
+        required: False
 
         # MongoDB Conf
       - name: MONGODB_USER
@@ -120,12 +132,18 @@ plans:
       longDescription: This plan will deploy a MongoDB HA instance using persistent storage
       cost: €0.00
     parameters:
+        # Container Specs 
       - name: MONGODB_VERSION
         default: 3.4
         title: Version of MongoDB image to be used (2.6, 3.2 or 3.4).
         type: enum
         enum: ['2.6', '3.2', '3.4']
         display_type: select
+      - name: MONGODB_IMAGE_TAG
+        default: 'latest'
+        type: string
+        pattern: "^[a-zA-Z0-9_.-]*$"
+        required: False
 
         # MongoDB Conf
       - name: MONGODB_USER

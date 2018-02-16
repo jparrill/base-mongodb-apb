@@ -5,6 +5,7 @@
       - "Entering on Main:"
       - "  Mode {{ mode }}"
       - "  State {{ state | default('undefined') }}"
+      - "  Plan: {{ _apb_plan_id }}" 
 
 # Provision
 - block:
@@ -30,6 +31,7 @@
 
 # Deprovision
 - block:
+  # Check what resource I have provision, if is a DC, just deprovision the standalone one
   - name: "[MONGODB-APB][MAIN] Check deployment type for MongoDB"
     command: "oc get dc/{{ service_name }} -n {{ namespace }} -o yaml"
     register: provisioned_resource

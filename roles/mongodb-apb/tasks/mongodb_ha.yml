@@ -3,6 +3,19 @@
   set_fact:
     service_name: "{{ MONGODB_SERVICE_NAME }}"
 
+- name: "[MONGODB-APB][{{ mode | upper }}] Create ImageStream for MongoDB image"
+  openshift_v1_image_stream:
+    state: "{{ state }}"
+    name: "{{ app_name }}"
+    namespace: "{{ namespace }}"
+    labels:
+      app: "{{ service_name }}"
+      name: "{{ service_name }}"
+    lookup_policy_local: False
+    tags:
+      - name: "{{ mongodb_image_tag }}"
+    docker_image_repository: "{{ mongodb_image }}"
+
 # A non-headless service which takes pod readiness into consideration
 - name: "[MONGODB-APB][{{ mode | upper }}] Set to {{ state }} the MongoDB Service"
   k8s_v1_service:

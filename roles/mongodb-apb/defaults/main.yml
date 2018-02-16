@@ -3,15 +3,16 @@
 service_name: 'mongodb'
 app_name: "{{ service_name }}-apb"
 #mongodb_image: "centos/mongodb-{{ MONGODB_VERSION | replace('.', '') }}-centos7" 
+mongodb_image_tag: "{{ MONGODB_IMAGE_TAG | default('latest') }}"
 mongodb_image: "registry.access.redhat.com/rhscl/mongodb-{{ MONGODB_VERSION | replace('.', '') }}-rhel7"
 mongodb_data_volume_name: "{{ service_name }}-data"
-mongodb_log_volume_name: "{{ service_name }}-log"
-mongodb_configmap_name: "{{ service_name }}-configmap"
 mongodb_data_pvc_name: "{{ service_name }}-data-pvc"
 
 # MongoDB Config
-mongodb_conf_path: '/etc/config'
 mongodb_data_path: '/var/lib/mongodb/data'
 
 # Other
-bin_path: '/opt/rh/rh-mongodb34/root/bin'
+bin_path: "/opt/rh/rh-mongodb{{ MONGODB_VERSION | replace('.', '') }}/root/bin"
+
+# MongoDB tests commands
+is_master: '\"db.isMaster()\"'
