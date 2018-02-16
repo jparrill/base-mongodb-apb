@@ -1,36 +1,58 @@
-# APB Tests for MongoDB
+# APB Execution modes
 
-## How it works
+## Provision
 
-We have X plans on _apb.yml_ then we will tests all of them following the apb test way of work.
+This mode will provision the APB app into Openshift, you must be logged as not system:admin to do that, and just consume it from Ansible Service Broker catalog.
 
-- Go to the root path of this repository and execute:
-```
-$ apb test
-```
+See the [needed parameters](./apb_parameters.yml) to know and ensure that all the required ones are fulfilled.
 
-This action will go through your _playbooks_ folder searching a file called _test.yml_ then will be executed as a playbook but without any variable loaded inside, just the namespace. If you see the logs on the APB pod you will se somithing like this:
+On this execution mode you have 3 plans:
 
-```
-...
-+ ansible-playbook /opt/apb/actions/test.yml --extra-vars '{"namespace": "apb-test-mongodb-apb-055cz"}'
-...
-```
+- **ephemeral**
+This plan will create a pod with an instance of MongoDB running on standalone mode and non-persistent storage
 
-With this data, our first step will be execute the base role to deploy the kubernetes modules inside of the container. After this step comes the post_tasks section with the actions related with our tests.
+- **persistent**
+This plan will create a pod with an instance of MongoDB running on standalone mode and a persistent storage, take care with a non-provided PVs whe you execute this mode, as a requirement will need at least a PV with 1 Gi (default) to work fine
 
-My point of view here is, load the variables related with a concrete plan that must be tested and the execute a task file called "test_tasks" because the only that changes between executions is just the variables, then we will contain the same tasks for both plans.
+- **HA**
+This plan will create a StatefullSet of X pods with some instances of MongoDB running on Replica Set mode and also Persistent storage. You need at least 3 PVs ready to be used with 1 Gi (default) of storage.
 
-This have a extra time to be tested, but I think that worth it. 
+This is the graph of a Provision execution:
 
-## How to add more tests
+![img](img/provision.svg)
 
-When you need to create a new plan or maybe an addon, just create the variables that make sense on the plan variables file and the add it on the *test_tasks.yml* and try it ;).
+## Deprovision
 
+The Deprovision will just erase the MongoDB deployment from your project, it will take care about if is a StatefullSet or a DeploymentConfig.
 
-## What more
+This is the execution flow of Deprovision execution
 
-Hope this could help you to understand how apb test works, and maybe could be useful in the future contributions.
+![img](img/deprovision.svg)
 
-Enjoy.
+## Test
 
+This execution mode will perform this actions on your Openshift installation:
+
+- Load variables for ephemeral scenario 
+- Create a project with a specific name
+- Provision mongodb-apb role with **Ephemeral Plan**
+- Deprovision mongodb-apb role with **Ephemeral Plan**
+- Delete the project with a specific name
+
+- Load variables for persistent scenario 
+- Create a project with a specific name
+- Provision mongodb-apb role with **Persistent Plan**
+- Deprovision mongodb-apb role with **Persistent Plan**
+- Delete the project with a specific name
+
+- Load variables for HA scenario 
+- Create a project with a specific name
+- Provision mongodb-apb role with **HA Plan**
+- Deprovision mongodb-apb role with **HA Plan**
+- Delete the project with a specific name
+
+This mode only could be executed from command line and are oriented to APB Development and Support
+
+This is the execution flow of Test mode
+
+![img](img/test.svg)

@@ -9,7 +9,12 @@
     - 2.6
     - 3.2
     - 3.4
-  - _Description_: 'Version for your MongoDB Cointaner' 
+  - _Description_: 'Version for your MongoDB Cointaner'
+
+- **MONGODB_IMAGE_TAG**
+  - _Default_: 'latest'
+  - _Type_: String
+  - _Description_: 'Tag of container image to be used.'
 
 - **MONGODB_USER**
   - _Default_: 'username'
@@ -42,3 +47,20 @@
   - _Default_: '1'
   - _Type_: Number
   - _Description_: 'PVC size to be claimed, in Gi.'
+
+## HA specific variables
+
+- **MONGODB_KEYFILE_VALUE**
+  - _Default_: 'xxxxxxxxxxxxxxxxx'
+  - _Type_: String
+  - _Description_: 'Keyfile to encode the communication between Replica set members.'
+
+- **MONGODB_REPLICA_NAME**
+  - _Default_: 'rs0'
+  - _Type_: String
+  - _Description_: 'Keyfile to encode the communication between Replica set members.'
+
+- **MONGODB_SERVICE_NAME**
+  - _Default_: 'mongodb'
+  - _Type_: String
+  - _Description_: 'Service name for MongoDB's Replica Set.'

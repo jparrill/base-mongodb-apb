@@ -83,6 +83,7 @@ plans:
         display_type: select
       - name: MONGODB_IMAGE_TAG
         default: 'latest'
+        title: Tag of container image to be used.
         type: string
         pattern: "^[a-zA-Z0-9_.-]*$"
         required: False
