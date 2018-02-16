@@ -17,7 +17,7 @@
   wait_for:
     port: 27017
     host: "{{ mongodb_svc.service.spec.cluster_ip }}"
-    timeout: 300
+    timeout: 600
   register: mongodb_conn
   when: state == "present"
 

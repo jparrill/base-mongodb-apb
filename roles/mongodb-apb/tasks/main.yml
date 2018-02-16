@@ -3,8 +3,8 @@
   debug:
     msg:
       - "Entering on Main:"
-      - "  Mode {{ mode }}"
-      - "  State {{ state | default('undefined') }}"
+      - "  Mode: {{ mode }}"
+      - "  State: {{ state | default('undefined') }}"
       - "  Plan: {{ _apb_plan_id }}" 
 
 # Provision
@@ -60,11 +60,11 @@
 - block:
   - name: "[MONGODB-APB][MAIN] Deploying MongoDB"
     include_tasks: mongodb.yml
-    when: deployment_type == 'standalone'
+    when: _apb_plan_id != 'HA'
 
   - name: "[MONGODB-APB][MAIN] Deploying MongoDB HA"
     include_tasks: mongodb_ha.yml
-    when: deployment_type == 'cluster'
+    when: _apb_plan_id == 'HA'
 
   - name: "[MONGODB-APB][MAIN] Test MongoDB deployment"
     include_tasks: test.yml
