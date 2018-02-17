@@ -1,5 +1,6 @@
 # MongoDB APB
 
+## DEPRECATED REPO working on https://github.com/ansibleplaybookbundle/mongodb-apb
 ![img](docs/img/mongodb-logo.png)
 
 ## Description
